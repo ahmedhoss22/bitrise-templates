@@ -8,7 +8,7 @@ workflows:
           inputs:
             - fetch_tags: "yes"
             
-      - path::../getVersionStep:
+      - path::./getVersionStep:
           title: "Test Get Version Step"
           inputs:
             - branch: "develop"
@@ -34,7 +34,7 @@ workflows:
           inputs:
             - fetch_tags: "yes"
             
-      - path::../getVersionStep:
+      - path::./getVersionStep:
           title: "Test iOS UAT Build Number Increment"
           inputs:
             - branch: "uat"
@@ -60,7 +60,7 @@ workflows:
           inputs:
             - fetch_tags: "yes"
             
-      - path::../getVersionStep:
+      - path::./getVersionStep:
           title: "Calculate Version"
           inputs:
             - branch: "develop"
@@ -97,7 +97,7 @@ workflows:
                 echo "Work items:"
                 cat /tmp/artifacts/work_items.txt
                 
-      - path::../createWiki:
+      - path::./createWiki:
           title: "Create Wiki Page"
           inputs: 
             - ado_project: "$ADO_PROJECT"
