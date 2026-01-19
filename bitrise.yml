@@ -1,0 +1,126 @@
+format_version: '11'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+workflows:
+  test:
+    steps:
+      - git-clone:
+          inputs:
+            - fetch_tags: "yes"
+            
+      - path::../getVersionStep:
+          title: "Test Get Version Step"
+          inputs:
+            - branch: "develop"
+            - platform: "web"
+            
+      - script:
+          title: "Display Version Output"
+          inputs:
+            - content: |
+                #!/bin/bash
+                set -e
+                echo "=========================================="
+                echo "Version Calculation Results:"
+                echo "=========================================="
+                echo "Current Version: $CURRENT_VERSION"
+                echo "New Version:     $NEW_VERSION"
+                echo "Bump Type:       $BUMP_TYPE"
+                echo "=========================================="
+  
+  test_ios_uat:
+    steps:
+      - git-clone: 
+          inputs:
+            - fetch_tags: "yes"
+            
+      - path::../getVersionStep:
+          title: "Test iOS UAT Build Number Increment"
+          inputs:
+            - branch: "uat"
+            - platform: "ios"
+            
+      - script:
+          title: "Display Version Output"
+          inputs:
+            - content: |
+                #!/bin/bash
+                set -e
+                echo "=========================================="
+                echo "iOS UAT Version Results:"
+                echo "=========================================="
+                echo "Current Version: $CURRENT_VERSION"
+                echo "New Version:     $NEW_VERSION"
+                echo "Bump Type:       $BUMP_TYPE"
+                echo "=========================================="
+  
+  test_wiki:
+    steps:
+      - git-clone:
+          inputs:
+            - fetch_tags: "yes"
+            
+      - path::../getVersionStep:
+          title: "Calculate Version"
+          inputs:
+            - branch: "develop"
+            - platform: "android"
+            
+      - script:
+          title: "Generate Sample Commit Details"
+          inputs:
+            - content: |
+                #!/bin/bash
+                set -e
+                
+                # Create sample commit details file
+                mkdir -p /tmp/artifacts
+                cat > /tmp/artifacts/commit_details.txt << 'EOF'
+                feat|Add user authentication
+                feat|Implement dark mode
+                fix|Resolve login timeout issue
+                fix|Fix crash on startup
+                docs|Update README
+                refactor|Simplify validation logic
+                EOF
+                
+                # Create sample work items file
+                cat > /tmp/artifacts/work_items.txt << 'EOF'
+                12345
+                67890
+                EOF
+                
+                echo "Sample files created:"
+                echo "Commit details:"
+                cat /tmp/artifacts/commit_details.txt
+                echo ""
+                echo "Work items:"
+                cat /tmp/artifacts/work_items.txt
+                
+      - path::../createWiki:
+          title: "Create Wiki Page"
+          inputs: 
+            - ado_project: "$ADO_PROJECT"
+            - wiki_repo: "$ADO_WIKI_REPO"
+            - branch_name: "develop"
+            - new_version: "$NEW_VERSION"
+            - bump_type: "$BUMP_TYPE"
+            - new_tag: "develop/$NEW_VERSION"
+            - platform: "android"
+            - ado_token: "$ADO_PAT"
+            - commit_details_path: "/tmp/artifacts/commit_details.txt"
+            - work_items_path: "/tmp/artifacts/work_items.txt"
+            
+      - script:
+          title: "Display Wiki Results"
+          inputs:
+            - content: |
+                #!/bin/bash
+                set -e
+                echo "=========================================="
+                echo "Wiki Page Creation Results:"
+                echo "=========================================="
+                echo "Wiki Page URL:  $WIKI_PAGE_URL"
+                echo "Wiki Page Path: $WIKI_PAGE_PATH"
+                echo "=========================================="
+

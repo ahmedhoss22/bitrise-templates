@@ -1,0 +1,67 @@
+id: get-version-step
+title: "Semantic Version Calculator"
+summary: "Calculates semantic version based on conventional commits"
+description: |
+  This step analyzes git commits using conventional commit format and calculates
+  the next semantic version based on commit types (feat, fix, breaking changes).
+  
+  Features:
+  - Supports conventional commit format (feat, fix, BREAKING CHANGE)
+  - Platform-specific versioning (web, ios, android, backend)
+  - Special handling for iOS UAT builds (build number increment)
+  - Outputs new version and bump type
+  
+  Commit Types:
+  - feat: Minor version bump (1.0.0 -> 1.1.0)
+  - fix: Patch version bump (1.0.0 -> 1.0.1)
+  - BREAKING CHANGE or !: Major version bump (1.0.0 -> 2.0.0)
+  - Other types (docs, style, refactor, etc.): No version bump
+
+website: https://github.com/areebgroup/versioning
+source_code_url: https://github.com/areebgroup/versioning
+support_url: https://github.com/areebgroup/versioning/issues
+
+type_tags:
+  - utility
+  - versioning
+  - git
+
+toolkit:
+  bash:
+    entry_file: step.sh
+
+inputs:
+  - branch:
+      title: "Branch Name"
+      description: |
+        The branch name to use for version tagging.
+        This will be used to find existing tags in the format: branch/version
+      is_required: true
+      
+  - platform:
+      title: "Platform"
+      description: |
+        The platform for which to calculate the version.
+        Special handling: iOS + UAT branch will only increment build number.
+      is_required: true
+      value_options:
+        - web
+        - ios
+        - android
+        - backend
+
+outputs:
+  - NEW_VERSION:
+      title: "New Version"
+      description: |
+        The calculated new semantic version (e.g., 1.2.3 or 1.2.3.4 for iOS UAT)
+        
+  - BUMP_TYPE:
+      title: "Bump Type"
+      description: |
+        The type of version bump performed: major, minor, patch, build, or none
+        
+  - CURRENT_VERSION:
+      title: "Current Version"
+      description: |
+        The current version before the bump (extracted from latest git tag)
