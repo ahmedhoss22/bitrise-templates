@@ -1,0 +1,132 @@
+id: create-wiki-page-step
+title: "Azure DevOps Wiki Page Creator"
+summary: "Creates release notes wiki pages in Azure DevOps"
+description: |
+  This step creates structured release notes pages in Azure DevOps Wiki.
+  
+  Features:
+  - Creates wiki pages with release notes from conventional commits
+  - Automatically creates parent pages if they don't exist
+  - Groups commits by type (features, fixes, docs, etc.)
+  - Links to work items mentioned in commits
+  - Includes build and tag information
+  - Supports platform-specific organization
+  
+  The step expects commit details in a specific format (typically generated
+  by the get-version-step) and uses Azure DevOps REST API to create wiki pages.
+
+website: https://github.com/areebgroup/versioning
+source_code_url: https://github.com/areebgroup/versioning
+support_url: https://github.com/areebgroup/versioning/issues
+
+type_tags:
+  - utility
+  - documentation
+  - azure-devops
+
+toolkit:
+  bash:
+    entry_file: step.sh
+
+inputs:
+  - ado_project:
+      title: "Azure DevOps Project"
+      description: |
+        The Azure DevOps project name where the wiki resides.
+      is_required: true
+      
+  - wiki_repo:
+      title: "Wiki Repository Name"
+      description: |
+        The name of the wiki repository in Azure DevOps.
+      is_required: true
+      
+  - branch_name:
+      title: "Branch Name"
+      description: |
+        The branch name for organizing wiki pages.
+      is_required: true
+      
+  - new_version:
+      title: "New Version"
+      description: |
+        The new version number for this release (e.g., 1.2.3).
+      is_required: true
+      
+  - bump_type:
+      title: "Bump Type"
+      description: |
+        The type of version bump (major, minor, patch, build, none).
+        If set to "none", wiki page creation will be skipped.
+      is_required: true
+      
+  - new_tag:
+      title: "New Tag"
+      description: |
+        The full git tag name (e.g., develop/1.2.3).
+      is_required: true
+      
+  - platform:
+      title: "Platform"
+      description: |
+        The platform for organizing wiki pages (web, ios, android, backend).
+      is_required: true
+      value_options:
+        - web
+        - ios
+        - android
+        - backend
+        
+  - ado_token:
+      title: "Azure DevOps Access Token"
+      description: |
+        Personal Access Token (PAT) with Wiki read/write permissions.
+        Should be stored as a secret in Bitrise.
+      is_required: true
+      is_sensitive: true
+      
+  - commit_details_path:
+      title: "Commit Details File Path"
+      description: |
+        Path to the commit details file (format: TYPE|DESCRIPTION per line).
+        Leave empty if no commit details are available.
+      is_required: false
+      
+  - work_items_path:
+      title: "Work Items File Path"
+      description: |
+        Path to the work items file (one work item ID per line).
+        Leave empty if no work items are available.
+      is_required: false
+      
+  - build_number:
+      title: "Build Number"
+      description: |
+        The build number to include in the wiki page.
+        Defaults to BITRISE_BUILD_NUMBER if not provided.
+      is_required: false
+      
+  - build_url:
+      title: "Build URL"
+      description: |
+        The build URL to link in the wiki page.
+        Defaults to BITRISE_BUILD_URL if not provided.
+      is_required: false
+      
+  - author:
+      title: "Author Name"
+      description: |
+        The author name to include in the wiki page.
+        Defaults to GIT_CLONE_COMMIT_AUTHOR_NAME if not provided.
+      is_required: false
+
+outputs:
+  - WIKI_PAGE_URL:
+      title: "Wiki Page URL"
+      description: |
+        The URL of the created wiki page.
+        
+  - WIKI_PAGE_PATH:
+      title: "Wiki Page Path"
+      description: |
+        The path of the created wiki page within the wiki.
