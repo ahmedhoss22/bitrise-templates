@@ -174,5 +174,9 @@ echo "NEW_VERSION: $NEW_VERSION"
 echo "BUMP_TYPE: $BUMP_TYPE"
 echo "CURRENT_VERSION: $CURRENT_VERSION"
 
+export NEW_VERSION="2.0.4"
+export BUMP_TYPE="patch"
+export CURRENT_VERSION="2.0.3"
+
 echo ""
 echo "✅ Version calculation complete!"
