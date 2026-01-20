@@ -51,19 +51,15 @@ inputs:
         - backend
 
 outputs:
-  # - NEW_VERSION:
-  #     value: NEW_VERSION
-  #     title: "New Version"
-  #     description: "The calculated new semantic version (e.g., 1.2.3 or 1.2.3.4 for iOS UAT)"
-  - BUMP_TYPE:
-      value: BUMP_TYPE
-      title: "Bump Type"
-      description: "The type of version bump performed: major, minor, patch, build, or none"
-  - CURRENT_VERSION:
-      value: CURRENT_VERSION
-      title: "Current Version"
-      description: "The current version before the bump (extracted from latest git tag)"
   - NEW_VERSION:  
     opts:    
       title: New Version   
       summary: The calculated new semantic version (e.g., 1.2.3 or 1.2.3.4 for iOS UAT)
+  - BUMP_TYPE:
+    opts:    
+      title: "Bump Type"
+      summary: "The type of version bump performed: major, minor, patch, build, or none"
+  - CURRENT_VERSION:
+    opts:    
+      title: "Current Version"
+      summary: "The current version before the bump (extracted from latest git tag)"
