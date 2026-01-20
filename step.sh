@@ -170,5 +170,9 @@ envman add --key NEW_VERSION --value "$NEW_VERSION"
 envman add --key BUMP_TYPE --value "$BUMP_TYPE"
 envman add --key CURRENT_VERSION --value "$CURRENT_VERSION"
 
+echo "NEW_VERSION: $NEW_VERSION"
+echo "BUMP_TYPE": $BUMP_TYPE"
+echo "CURRENT_VERSION:$CURRENT_VERSION"
+
 echo ""
 echo "✅ Version calculation complete!"
