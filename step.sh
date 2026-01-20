@@ -14,6 +14,7 @@ echo ""
 echo "Fetching current version from git tags..."
 
 # Get all tags matching the branch pattern
+git fetch origin --tags --prune
 LATEST_TAG=$(git tag -l "$branch/*" --sort=-v:refname | head -n 1)
 echo "Latest tag found: $LATEST_TAG"
 
