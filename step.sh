@@ -89,6 +89,7 @@ fi
 # Count commits
 COMMIT_COUNT=$(echo "$COMMIT_SUBJECTS" | grep -c . || echo "0")
 echo "Found $COMMIT_COUNT commits to analyze"
+echo  "$COMMIT_SUBJECTS "
 echo ""
 
 # ============================================
