@@ -13,6 +13,10 @@ echo ""
 # ============================================
 echo "Fetching current version from git tags..."
 
+# Ensure tags are fetched from remote
+echo "Fetching tags from remote..."
+git fetch --tags --force 2>/dev/null || echo "Warning: Could not fetch tags from remote"
+
 # Get all tags matching the branch pattern
 LATEST_TAG=$(git tag -l "$branch/*" --sort=-v:refname | head -n 1)
 echo "Latest tag found: $LATEST_TAG"
