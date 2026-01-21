@@ -14,7 +14,6 @@ echo ""
 echo "Fetching current version from git tags..."
 
 # Get all tags matching the branch pattern
-git fetch origin --tags --prune --no-recurse-submodules
 LATEST_TAG=$(git tag -l "$branch/*" --sort=-v:refname | head -n 1)
 echo "Latest tag found: $LATEST_TAG"
 
@@ -90,7 +89,36 @@ fi
 # Count commits
 COMMIT_COUNT=$(echo "$COMMIT_SUBJECTS" | grep -c . || echo "0")
 echo "Found $COMMIT_COUNT commits to analyze"
-echo  "$COMMIT_SUBJECTS "
+echo ""
+
+# ============================================
+# STEP 3.5: Write Commit Details for Wiki Step
+# ============================================
+echo "Writing commit details to /tmp/artifacts/commit_details.txt..."
+mkdir -p /tmp/artifacts
+
+# Parse conventional commits and write to file
+# Format: TYPE|DESCRIPTION (one per line)
+echo "$COMMIT_SUBJECTS" | while read -r COMMIT; do
+  if [ -n "$COMMIT" ]; then
+    echo "$COMMIT"
+    # Extract type and description from conventional commit format
+    # Pattern: type(scope): description OR type: description
+    if echo "$COMMIT" | grep -qE "^[a-z]+(\(.+\))?!?:"; then
+      TYPE=$(echo "$COMMIT" | sed -E 's/^([a-z]+)(\(.+\))?!?:.*/\1/')
+      DESC=$(echo "$COMMIT" | sed -E 's/^[a-z]+(\(.+\))?!?:\s*//')
+      echo "$TYPE|$DESC" >> /tmp/artifacts/commit_details.txt
+    fi
+  fi
+done
+
+if [ -f /tmp/artifacts/commit_details.txt ]; then
+  echo "Commit details written:"
+  cat /tmp/artifacts/commit_details.txt
+else
+  echo "No conventional commits found to write"
+  touch /tmp/artifacts/commit_details.txt
+fi
 echo ""
 
 # ============================================
@@ -169,14 +197,6 @@ echo "=========================================="
 envman add --key NEW_VERSION --value "$NEW_VERSION"
 envman add --key BUMP_TYPE --value "$BUMP_TYPE"
 envman add --key CURRENT_VERSION --value "$CURRENT_VERSION"
-
-echo "NEW_VERSION: $NEW_VERSION"
-echo "BUMP_TYPE: $BUMP_TYPE"
-echo "CURRENT_VERSION: $CURRENT_VERSION"
-
-export NEW_VERSION="2.0.4"
-export BUMP_TYPE="patch"
-export CURRENT_VERSION="2.0.3"
 
 echo ""
 echo "✅ Version calculation complete!"
