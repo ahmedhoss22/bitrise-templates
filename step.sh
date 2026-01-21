@@ -294,6 +294,48 @@ echo ""
 
 if [ "$HTTP_CODE" == "201" ] || [ "$HTTP_CODE" == "200" ]; then
   echo "✅ Wiki page created successfully with complete release notes!"
+elif [ "$HTTP_CODE" == "500" ] && grep -q "WikiPageAlreadyExistsException" /tmp/wiki_response.json; then
+  # Page already exists - update it instead
+  echo "📝 Page already exists. Updating instead..."
+  
+  # Get the current page to retrieve ETag for update
+  curl -s -X GET "$API_URL" \
+    -H "Authorization: Bearer $ado_token" \
+    -D /tmp/wiki_headers.txt \
+    -o /tmp/wiki_current.json
+  
+  ETAG=$(grep -i "^etag:" /tmp/wiki_headers.txt 2>/dev/null | tr -d '\r' | sed 's/^[eE][tT][aA][gG]: *//')
+  
+  if [ -z "$ETAG" ]; then
+    # Try extracting from response body
+    ETAG=$(cat /tmp/wiki_current.json | jq -r '.eTag' 2>/dev/null)
+  fi
+  
+  echo "Retrieved ETag: $ETAG"
+  
+  if [ -n "$ETAG" ] && [ "$ETAG" != "null" ]; then
+    # Update with If-Match header
+    HTTP_CODE=$(curl -s -X PUT "$API_URL" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer $ado_token" \
+      -H "If-Match: $ETAG" \
+      -d "{\"content\": $(echo "$WIKI_CONTENT" | jq -Rs .)}" \
+      -o /tmp/wiki_response.json \
+      -w "%{http_code}")
+    
+    echo "Update HTTP Status: $HTTP_CODE"
+    cat /tmp/wiki_response.json | jq '.' 2>/dev/null || cat /tmp/wiki_response.json
+    
+    if [ "$HTTP_CODE" == "200" ]; then
+      echo "✅ Wiki page updated successfully!"
+    else
+      echo "❌ Failed to update wiki page (HTTP $HTTP_CODE)"
+      exit 1
+    fi
+  else
+    echo "❌ Could not retrieve ETag for update"
+    exit 1
+  fi
 elif [ "$HTTP_CODE" == "404" ]; then
   # Ancestor page issue - try creating with simpler path structure
   echo "⚠️  Ancestor page issue detected. Trying alternative approach..."
