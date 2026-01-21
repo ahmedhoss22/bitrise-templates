@@ -30,30 +30,35 @@ toolkit:
 
 inputs:
   - ado_project:
+    opts:
       title: "Azure DevOps Project"
       description: |
         The Azure DevOps project name where the wiki resides.
       is_required: true
       
   - wiki_repo:
+    opts:
       title: "Wiki Repository Name"
       description: |
         The name of the wiki repository in Azure DevOps.
       is_required: true
       
   - branch_name:
+    opts:
       title: "Branch Name"
       description: |
         The branch name for organizing wiki pages.
       is_required: true
       
   - new_version:
+    opts:
       title: "New Version"
       description: |
         The new version number for this release (e.g., 1.2.3).
       is_required: true
       
   - bump_type:
+    opts:
       title: "Bump Type"
       description: |
         The type of version bump (major, minor, patch, build, none).
@@ -61,12 +66,14 @@ inputs:
       is_required: true
       
   - new_tag:
+    opts:
       title: "New Tag"
       description: |
         The full git tag name (e.g., develop/1.2.3).
       is_required: true
       
   - platform:
+    opts:
       title: "Platform"
       description: |
         The platform for organizing wiki pages (web, ios, android, backend).
@@ -78,6 +85,7 @@ inputs:
         - backend
         
   - ado_token:
+    opts:
       title: "Azure DevOps Access Token"
       description: |
         Personal Access Token (PAT) with Wiki read/write permissions.
@@ -85,35 +93,40 @@ inputs:
       is_required: true
       is_sensitive: true
       
-  - commit_details_path:
+  - commit_details_path: ""
+    opts:
       title: "Commit Details File Path"
       description: |
         Path to the commit details file (format: TYPE|DESCRIPTION per line).
         Leave empty if no commit details are available.
       is_required: false
       
-  - work_items_path:
+  - work_items_path: ""
+    opts:
       title: "Work Items File Path"
       description: |
         Path to the work items file (one work item ID per line).
         Leave empty if no work items are available.
       is_required: false
       
-  - build_number:
+  - build_number: ""
+    opts:
       title: "Build Number"
       description: |
         The build number to include in the wiki page.
         Defaults to BITRISE_BUILD_NUMBER if not provided.
       is_required: false
       
-  - build_url:
+  - build_url: ""
+    opts:
       title: "Build URL"
       description: |
         The build URL to link in the wiki page.
         Defaults to BITRISE_BUILD_URL if not provided.
       is_required: false
       
-  - author:
+  - author: ""
+    opts:
       title: "Author Name"
       description: |
         The author name to include in the wiki page.
@@ -122,11 +135,13 @@ inputs:
 
 outputs:
   - WIKI_PAGE_URL:
+    opts:
       title: "Wiki Page URL"
       description: |
         The URL of the created wiki page.
         
   - WIKI_PAGE_PATH:
+    opts:
       title: "Wiki Page Path"
       description: |
         The path of the created wiki page within the wiki.

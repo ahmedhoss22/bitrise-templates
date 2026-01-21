@@ -204,7 +204,10 @@ echo ""
 echo "=========================================="
 echo "STEP 6: Creating parent pages if needed"
 echo "=========================================="
-WIKI_PAGE_PATH="releases/$platform/$branch_name/$new_version"
+# Structure: releases/{Platform}/{branch_name}/{version}
+# Capitalize platform name to match existing wiki structure
+PLATFORM_CAP="$(echo "$platform" | sed 's/.*/\u&/')"
+WIKI_PAGE_PATH="releases/$PLATFORM_CAP/$branch_name/$new_version"
 echo "Target page path: $WIKI_PAGE_PATH"
 
 # Split path and create each parent
@@ -237,17 +240,23 @@ This page was automatically created for organizing releases.
       
       CREATE_PARENT_URL="https://dev.azure.com/areebgroup/$ado_project/_apis/wiki/wikis/$wiki_repo/pages?path=$CURRENT_PATH&api-version=7.1"
       
-      curl -s -X PUT "$CREATE_PARENT_URL" \
+      PARENT_HTTP_CODE=$(curl -s -X PUT "$CREATE_PARENT_URL" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $ado_token" \
         -d "{
           \"content\": $(echo "$PARENT_CONTENT" | jq -Rs .)
         }" \
         -o /tmp/parent_create_response.json \
-        -w "\n  HTTP Status: %{http_code}\n"
+        -w "%{http_code}")
       
-      echo "  Response:"
-      cat /tmp/parent_create_response.json | jq '.' 2>/dev/null || cat /tmp/parent_create_response.json
+      echo "  HTTP Status: $PARENT_HTTP_CODE"
+      
+      if [ "$PARENT_HTTP_CODE" == "201" ] || [ "$PARENT_HTTP_CODE" == "200" ]; then
+        echo "  ✓ Parent page created successfully"
+      else
+        echo "  ⚠️  Warning: Could not create parent page (will try to continue)"
+        cat /tmp/parent_create_response.json | jq -r '.message' 2>/dev/null || cat /tmp/parent_create_response.json
+      fi
     else
       echo "  → Page already exists (HTTP $HTTP_CODE)"
     fi
@@ -285,6 +294,62 @@ echo ""
 
 if [ "$HTTP_CODE" == "201" ] || [ "$HTTP_CODE" == "200" ]; then
   echo "✅ Wiki page created successfully with complete release notes!"
+elif [ "$HTTP_CODE" == "404" ]; then
+  # Ancestor page issue - try creating with simpler path structure
+  echo "⚠️  Ancestor page issue detected. Trying alternative approach..."
+  
+  # Try creating missing parent pages one at a time with wikiIdentifier
+  WIKI_ID=$(cat /tmp/wikis_list.json | jq -r --arg wiki "$wiki_repo" '.value[] | select(.name == $wiki) | .id' 2>/dev/null)
+  
+  if [ -n "$WIKI_ID" ]; then
+    echo "Using Wiki ID: $WIKI_ID"
+    
+    # Create each missing parent page using wiki ID instead of name
+    CURRENT_PATH=""
+    for i in "${!PATH_PARTS[@]}"; do
+      if [ $i -lt $((${#PATH_PARTS[@]} - 1)) ]; then
+        if [ -z "$CURRENT_PATH" ]; then
+          CURRENT_PATH="${PATH_PARTS[$i]}"
+        else
+          CURRENT_PATH="$CURRENT_PATH/${PATH_PARTS[$i]}"
+        fi
+        
+        # Check and create using wiki ID
+        PARENT_URL="https://dev.azure.com/areebgroup/$ado_project/_apis/wiki/wikis/$WIKI_ID/pages?path=$CURRENT_PATH&api-version=7.1"
+        PARENT_CONTENT="# ${PATH_PARTS[$i]^}"$'\n\n'"This page was automatically created."
+        
+        curl -s -X PUT "$PARENT_URL" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $ado_token" \
+          -d "{\"content\": $(echo "$PARENT_CONTENT" | jq -Rs .)}" \
+          -o /dev/null 2>&1 || true
+      fi
+    done
+    
+    # Retry creating the final page
+    echo "Retrying final page creation..."
+    RETRY_URL="https://dev.azure.com/areebgroup/$ado_project/_apis/wiki/wikis/$WIKI_ID/pages?path=$WIKI_PAGE_PATH&api-version=7.1"
+    
+    HTTP_CODE=$(curl -s -X PUT "$RETRY_URL" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer $ado_token" \
+      -d "{\"content\": $(echo "$WIKI_CONTENT" | jq -Rs .)}" \
+      -o /tmp/wiki_response.json \
+      -w "%{http_code}")
+    
+    echo "Retry HTTP Status: $HTTP_CODE"
+    
+    if [ "$HTTP_CODE" == "201" ] || [ "$HTTP_CODE" == "200" ]; then
+      echo "✅ Wiki page created successfully on retry!"
+    else
+      echo "❌ Failed to create wiki page after retry (HTTP $HTTP_CODE)"
+      cat /tmp/wiki_response.json | jq '.' 2>/dev/null || cat /tmp/wiki_response.json
+      exit 1
+    fi
+  else
+    echo "❌ Could not find wiki ID"
+    exit 1
+  fi
 else
   echo "❌ Failed to create wiki page (HTTP $HTTP_CODE)"
   exit 1
