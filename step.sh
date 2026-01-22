@@ -102,16 +102,22 @@ echo "Writing commit details to /tmp/artifacts/commit_details.txt..."
 mkdir -p /tmp/artifacts
 
 # Parse conventional commits and write to file
-# Format: TYPE|DESCRIPTION (one per line)
-echo "$COMMIT_SUBJECTS" | while read -r COMMIT; do
-  if [ -n "$COMMIT" ]; then
-    echo "$COMMIT"
+# Format: TYPE|DESCRIPTION|HASH|AUTHOR (one per line)
+if [ -z "$LATEST_TAG" ]; then
+  COMMIT_DETAILS=$(git log --pretty=format:"%s|%h|%an" origin/$branch 2>/dev/null || git log --pretty=format:"%s|%h|%an" $branch)
+else
+  COMMIT_DETAILS=$(git log --pretty=format:"%s|%h|%an" $LATEST_TAG..HEAD)
+fi
+
+echo "$COMMIT_DETAILS" | while IFS='|' read -r SUBJECT HASH AUTHOR; do
+  if [ -n "$SUBJECT" ]; then
+    echo "Processing: $SUBJECT ($HASH) by $AUTHOR"
     # Extract type and description from conventional commit format
     # Pattern: type(scope): description OR type: description
-    if echo "$COMMIT" | grep -qE "^[a-z]+(\(.+\))?!?:"; then
-      TYPE=$(echo "$COMMIT" | sed -E 's/^([a-z]+)(\(.+\))?!?:.*/\1/')
-      DESC=$(echo "$COMMIT" | sed -E 's/^[a-z]+(\(.+\))?!?:\s*//')
-      echo "$TYPE|$DESC" >> /tmp/artifacts/commit_details.txt
+    if echo "$SUBJECT" | grep -qE "^[a-z]+(\(.+\))?!?:"; then
+      TYPE=$(echo "$SUBJECT" | sed -E 's/^([a-z]+)(\(.+\))?!?:.*/\1/')
+      DESC=$(echo "$SUBJECT" | sed -E 's/^[a-z]+(\(.+\))?!?:\s*//')
+      echo "$TYPE|$DESC|$HASH|$AUTHOR" >> /tmp/artifacts/commit_details.txt
     fi
   fi
 done
