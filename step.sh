@@ -175,9 +175,9 @@ declare -A COMMIT_GROUPS
 if [ -n "$COMMIT_FILE" ] && [ -f "$COMMIT_FILE" ] && [ -s "$COMMIT_FILE" ]; then
   while IFS='|' read -r TYPE DESCRIPTION HASH AUTHOR; do
     if [ -n "$TYPE" ] && [ -n "$DESCRIPTION" ]; then
-      # Build commit URL
+      # Build commit URL (Azure DevOps uses ?version=GC{hash} format)
       if [ -n "$HASH" ]; then
-        COMMIT_URL="https://dev.azure.com/areebgroup/$ado_project/_git/$REPO_NAME/commit/$HASH"
+        COMMIT_URL="https://dev.azure.com/areebgroup/$ado_project/_git/$REPO_NAME?version=GC$HASH"
         COMMIT_LINK=" ([\`$HASH\`]($COMMIT_URL))"
       else
         COMMIT_LINK=""
