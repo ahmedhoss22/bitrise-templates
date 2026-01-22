@@ -42,6 +42,14 @@ inputs:
       description: |
         The name of the wiki repository in Azure DevOps.
       is_required: true
+
+  - git_repo_name: ""
+    opts:
+      title: "Git Repository Name"
+      description: |
+        The Azure DevOps git repository name for tag links.
+        Example: ecommerce_01_android
+      is_required: false
       
   - branch_name:
     opts:

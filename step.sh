@@ -84,8 +84,34 @@ else
   echo "Tag commit SHA: $TAG_COMMIT_SHA"
 fi
 
-# Build the tag URL
-TAG_URL="https://dev.azure.com/areebgroup/$ado_project/_git/${BITRISE_GIT_REPOSITORY_SLUG:-repo}?version=GT$TAG_NAME"
+# Build the tag URL - use git_repo_name input or auto-detect from remote
+if [ -n "$git_repo_name" ]; then
+  REPO_NAME="$git_repo_name"
+  echo "Using provided git_repo_name: $REPO_NAME"
+else
+  echo "Auto-detecting repository name from git remote..."
+  REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
+  echo "Remote URL: $REMOTE_URL"
+  
+  if [[ "$REMOTE_URL" == *"/_git/"* ]]; then
+    # HTTPS format: https://dev.azure.com/org/project/_git/repo_name
+    REPO_NAME=$(echo "$REMOTE_URL" | sed -E 's|.*/_git/([^/?.]+).*|\1|')
+  elif [[ "$REMOTE_URL" == *"ssh.dev.azure.com"* ]]; then
+    # SSH format: git@ssh.dev.azure.com:v3/org/project/repo_name
+    REPO_NAME=$(echo "$REMOTE_URL" | sed -E 's|.*:v3/[^/]+/[^/]+/([^/]+).*|\1|')
+  elif [[ "$REMOTE_URL" == *"visualstudio.com"* ]]; then
+    # Old VSTS format: https://org.visualstudio.com/project/_git/repo_name
+    REPO_NAME=$(echo "$REMOTE_URL" | sed -E 's|.*/_git/([^/?.]+).*|\1|')
+  else
+    REPO_NAME="${BITRISE_GIT_REPOSITORY_SLUG:-$ado_project}"
+  fi
+  
+  # Remove .git suffix if present
+  REPO_NAME="${REPO_NAME%.git}"
+  echo "Detected repository name: $REPO_NAME"
+fi
+
+TAG_URL="https://dev.azure.com/areebgroup/$ado_project/_git/$REPO_NAME?version=GT$TAG_NAME"
 echo "Tag URL: $TAG_URL"
 echo ""
 
