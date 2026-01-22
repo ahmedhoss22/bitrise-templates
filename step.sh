@@ -175,12 +175,12 @@ declare -A COMMIT_GROUPS
 if [ -n "$COMMIT_FILE" ] && [ -f "$COMMIT_FILE" ] && [ -s "$COMMIT_FILE" ]; then
   while IFS='|' read -r TYPE DESCRIPTION HASH AUTHOR; do
     if [ -n "$TYPE" ] && [ -n "$DESCRIPTION" ]; then
-      # Build commit URL
+      # Build commit URL (using full hash)
       if [ -n "$HASH" ]; then
-        # URL encode the branch ref (replace / with %2F)
-        ENCODED_REF=$(echo "refs/heads/$branch_name" | sed 's/\//%2F/g')
-        COMMIT_URL="https://dev.azure.com/areebgroup/$ado_project/_git/$REPO_NAME/commit/$HASH?refName=$ENCODED_REF"
-        COMMIT_LINK=" ([\`$HASH\`]($COMMIT_URL))"
+        COMMIT_URL="https://dev.azure.com/areebgroup/$ado_project/_git/$REPO_NAME/commit/$HASH"
+        # Display short hash (first 7 chars) but link to full hash
+        SHORT_HASH="${HASH:0:7}"
+        COMMIT_LINK=" ([\`$SHORT_HASH\`]($COMMIT_URL))"
       else
         COMMIT_LINK=""
       fi
