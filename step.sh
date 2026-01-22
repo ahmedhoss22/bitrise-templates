@@ -23,11 +23,17 @@ echo "Latest tag found: $LATEST_TAG"
 
 if [ -z "$LATEST_TAG" ]; then
   echo "No existing tags found for branch $branch"
-  CURRENT_VERSION="1.0.0"
+  CURRENT_VERSION="1.0.0.0"  # Default with BUILD=0 (will become 1.0.0.1)
 else
   echo "Latest tag found: $LATEST_TAG"
   # Extract version from tag (format: branch/version)
   CURRENT_VERSION=$(echo "$LATEST_TAG" | sed 's/.*\///')
+  
+  # If old 3-component format, add BUILD=0
+  if [[ ! "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "Converting 3-component version to 4-component format"
+    CURRENT_VERSION="${CURRENT_VERSION}.0"
+  fi
 fi
 
 echo "Current version: $CURRENT_VERSION"
@@ -37,15 +43,13 @@ echo ""
 # STEP 2: Parse Current Version
 # ============================================
 IFS='.' read -r MAJOR MINOR PATCH BUILD <<< "$CURRENT_VERSION"
-BUILD=${BUILD:-}  # Build number is optional
+BUILD=${BUILD:-0}  # Default BUILD to 0 if not present
 
 echo "Parsed version components:"
 echo "  MAJOR: $MAJOR"
 echo "  MINOR: $MINOR"
 echo "  PATCH: $PATCH"
-if [ -n "$BUILD" ]; then
-  echo "  BUILD: $BUILD"
-fi
+echo "  BUILD: $BUILD"
 echo ""
 
 # ============================================
@@ -158,7 +162,7 @@ elif echo "$COMMIT_SUBJECTS" | grep -qE "^fix(\(.+\))?:"; then
   echo "  ✓ Found fix commits - Patch version bump"
   BUMP_TYPE="patch"
 else
-  echo "  ℹ No version bump needed (only docs/style/refactor/perf/test/chore commits)"
+  echo "  ℹ No semantic bump (docs/style/refactor/perf/test/chore commits) - will increment BUILD number"
 fi
 
 echo ""
@@ -173,23 +177,34 @@ case $BUMP_TYPE in
     MAJOR=$((MAJOR + 1))
     MINOR=0
     PATCH=0
-    echo "  Major bump: $CURRENT_VERSION -> $MAJOR.$MINOR.$PATCH"
+    BUILD=1  # Reset BUILD on version bump
+    echo "  Major bump: $CURRENT_VERSION -> $MAJOR.$MINOR.$PATCH.$BUILD"
     ;;
   minor)
     MINOR=$((MINOR + 1))
     PATCH=0
-    echo "  Minor bump: $CURRENT_VERSION -> $MAJOR.$MINOR.$PATCH"
+    BUILD=1  # Reset BUILD on version bump
+    echo "  Minor bump: $CURRENT_VERSION -> $MAJOR.$MINOR.$PATCH.$BUILD"
     ;;
   patch)
     PATCH=$((PATCH + 1))
-    echo "  Patch bump: $CURRENT_VERSION -> $MAJOR.$MINOR.$PATCH"
+    BUILD=1  # Reset BUILD on version bump
+    echo "  Patch bump: $CURRENT_VERSION -> $MAJOR.$MINOR.$PATCH.$BUILD"
+    ;;
+  none)
+    # No semantic bump - just increment BUILD number
+    BUILD=$((BUILD + 1))
+    BUMP_TYPE="build"
+    echo "  Build increment: $CURRENT_VERSION -> $MAJOR.$MINOR.$PATCH.$BUILD"
     ;;
   *)
-    echo "  No bump: $CURRENT_VERSION (unchanged)"
+    BUILD=$((BUILD + 1))
+    BUMP_TYPE="build"
+    echo "  Build increment: $CURRENT_VERSION -> $MAJOR.$MINOR.$PATCH.$BUILD"
     ;;
 esac
 
-NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+NEW_VERSION="$MAJOR.$MINOR.$PATCH.$BUILD"
 echo ""
 
 # ============================================
@@ -201,12 +216,14 @@ echo "=========================================="
 echo "Current Version: $CURRENT_VERSION"
 echo "New Version:     $NEW_VERSION"
 echo "Bump Type:       $BUMP_TYPE"
+echo "Build Number:    $BUILD"
 echo "=========================================="
 
 # Export environment variables for next steps
 envman add --key NEW_VERSION --value "$NEW_VERSION"
 envman add --key BUMP_TYPE --value "$BUMP_TYPE"
 envman add --key CURRENT_VERSION --value "$CURRENT_VERSION"
+envman add --key BITRISE_BUILD_NUMBER --value "$BUILD"
 
 echo ""
 echo "✅ Version calculation complete!"
