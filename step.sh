@@ -173,9 +173,24 @@ fi
 declare -A COMMIT_GROUPS
 
 if [ -n "$COMMIT_FILE" ] && [ -f "$COMMIT_FILE" ] && [ -s "$COMMIT_FILE" ]; then
-  while IFS='|' read -r TYPE DESCRIPTION; do
+  while IFS='|' read -r TYPE DESCRIPTION HASH AUTHOR; do
     if [ -n "$TYPE" ] && [ -n "$DESCRIPTION" ]; then
-      COMMIT_GROUPS["$TYPE"]+="- $DESCRIPTION"$'\n'
+      # Build commit URL
+      if [ -n "$HASH" ]; then
+        COMMIT_URL="https://dev.azure.com/areebgroup/$ado_project/_git/$REPO_NAME/commit/$HASH"
+        COMMIT_LINK=" ([\`$HASH\`]($COMMIT_URL))"
+      else
+        COMMIT_LINK=""
+      fi
+      
+      # Add author if present
+      if [ -n "$AUTHOR" ]; then
+        AUTHOR_TEXT=" - *$AUTHOR*"
+      else
+        AUTHOR_TEXT=""
+      fi
+      
+      COMMIT_GROUPS["$TYPE"]+="- $DESCRIPTION$COMMIT_LINK$AUTHOR_TEXT"$'\n'
     fi
   done < "$COMMIT_FILE"
   
