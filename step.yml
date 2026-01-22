@@ -1,0 +1,72 @@
+title: "Push New Git Tag"
+summary: "Creates and pushes a new git tag for the release"
+description: |
+  This step creates an annotated git tag and pushes it to the remote repository.
+  The tag format is: {branch_name}/{new_version}
+  
+  Skip conditions:
+  - If bump_type is "none", the step will skip tag creation
+
+website: https://github.com/areebgroup/versioning
+source_code_url: https://github.com/areebgroup/versioning
+support_url: https://github.com/areebgroup/versioning/issues
+
+type_tags:
+  - utility
+  - git
+
+is_requires_admin_user: false
+is_always_run: false
+is_skippable: false
+
+toolkit:
+  bash:
+    entry_file: step.sh
+
+inputs:
+  - branch_name:
+    opts:
+      title: "Branch Name"
+      description: |
+        The branch name to use in the tag format.
+        Example: develop, main, release
+      is_required: true
+
+  - new_version:
+    opts:
+      title: "New Version"
+      description: |
+        The version number to tag.
+        Example: 1.0.0, 2.1.3
+      is_required: true
+
+  - bump_type:
+    opts:
+      title: "Bump Type"
+      description: |
+        The type of version bump (major, minor, patch, none).
+        If "none", the step will skip tag creation.
+      is_required: true
+
+  - git_user_name: ""
+    opts:
+      title: "Git User Name"
+      description: |
+        The git user name for the tag commit.
+        Defaults to GIT_CLONE_COMMIT_AUTHOR_NAME if not provided.
+      is_required: false
+
+  - git_user_email: ""
+    opts:
+      title: "Git User Email"
+      description: |
+        The git user email for the tag commit.
+        Defaults to GIT_CLONE_COMMIT_AUTHOR_EMAIL if not provided.
+      is_required: false
+
+outputs:
+  - NEW_TAG:
+    opts:
+      title: "New Tag"
+      description: "The full tag that was created (format: branch_name/new_version)"
+
