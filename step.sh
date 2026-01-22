@@ -102,11 +102,11 @@ echo "Writing commit details to /tmp/artifacts/commit_details.txt..."
 mkdir -p /tmp/artifacts
 
 # Parse conventional commits and write to file
-# Format: TYPE|DESCRIPTION|HASH|AUTHOR (one per line)
+# Format: TYPE|DESCRIPTION|FULL_HASH|AUTHOR (one per line)
 if [ -z "$LATEST_TAG" ]; then
-  COMMIT_DETAILS=$(git log --pretty=format:"%s|%h|%an" origin/$branch 2>/dev/null || git log --pretty=format:"%s|%h|%an" $branch)
+  COMMIT_DETAILS=$(git log --pretty=format:"%s|%H|%an" origin/$branch 2>/dev/null || git log --pretty=format:"%s|%H|%an" $branch)
 else
-  COMMIT_DETAILS=$(git log --pretty=format:"%s|%h|%an" $LATEST_TAG..HEAD)
+  COMMIT_DETAILS=$(git log --pretty=format:"%s|%H|%an" $LATEST_TAG..HEAD)
 fi
 
 echo "$COMMIT_DETAILS" | while IFS='|' read -r SUBJECT HASH AUTHOR; do
