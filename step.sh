@@ -68,14 +68,16 @@ echo "Updating version in file..."
 # Pattern 4: appVersion=1.1.0
 
 # Use sed to replace the version value
-# This pattern matches: key = "value" or key="value" or key=value
-sed -i.tmp "s/\(${version_key}[[:space:]]*=[[:space:]]*\"\)[^\"]*\"/\1${new_version}\"/" "$file_path"
+# Check if the version key uses quotes or not and apply appropriate pattern
 
-# Also handle case without quotes: key = value or key=value
-sed -i.tmp "s/\(${version_key}[[:space:]]*=[[:space:]]*\)[0-9.]*\([^0-9.]\|$\)/\1${new_version}\2/" "$file_path"
-
-# Remove temporary file created by sed
-rm -f "${file_path}.tmp"
+# First, check if the key has quotes
+if grep -q "${version_key}[[:space:]]*=[[:space:]]*\"" "$file_path"; then
+  # Pattern for quoted values: key = "value" or key="value"
+  sed -i "s/\(${version_key}[[:space:]]*=[[:space:]]*\"\)[^\"]*\"/\1${new_version}\"/" "$file_path"
+else
+  # Pattern for unquoted values: key = value or key=value
+  sed -i "s/\(${version_key}[[:space:]]*=[[:space:]]*\)[0-9.]*\([^0-9.\"]\|$\)/\1${new_version}\2/" "$file_path"
+fi
 
 echo "✓ Version updated successfully"
 echo ""
