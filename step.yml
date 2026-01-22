@@ -1,0 +1,69 @@
+id: update-file-version
+title: "Update File Version"
+summary: "Updates version value in a file based on key-value pattern"
+description: |
+  This step updates a version value in a file by searching for a specific key
+  and replacing its value with a new version.
+  
+  Features:
+  - Updates version in files with key=value format (e.g., appVersion=1.1.0)
+  - Supports custom file paths and version keys
+  - Prints file content after update for verification
+  - Works with any text file containing version information
+  
+  Common use cases:
+  - Update version in Kotlin configuration files (e.g., Versions.kt)
+  - Update version in properties files
+  - Update version in configuration files
+  
+  The step uses sed to find and replace the version value while preserving
+  the rest of the file content.
+
+website: https://github.com/areebgroup/versioning
+source_code_url: https://github.com/areebgroup/versioning
+support_url: https://github.com/areebgroup/versioning/issues
+
+type_tags:
+  - utility
+  - versioning
+  - file-update
+
+toolkit:
+  bash:
+    entry_file: step.sh
+
+inputs:
+  - file_path:
+      title: "File Path"
+      description: |
+        The path to the file containing the version to update.
+        This should be a relative or absolute path to the file.
+      is_required: true
+      value: "buildSrc/src/main/java/Versions.kt"
+      
+  - version_key:
+      title: "Version Key"
+      description: |
+        The key name to search for in the file.
+        The step will look for lines matching: key = "value" or key="value"
+        and replace the value with the new version.
+      is_required: true
+      value: "version"
+      
+  - new_version:
+      title: "New Version"
+      description: |
+        The new version to set in the file.
+        Typically this comes from the output of the get-version-step.
+        Use $NEW_VERSION to reference the output from the previous step.
+      is_required: true
+
+outputs:
+  - UPDATED_FILE_PATH:
+    opts:
+      title: "Updated File Path"
+      summary: "The path to the file that was updated"
+  - UPDATED_VERSION:
+    opts:
+      title: "Updated Version"
+      summary: "The version that was set in the file"
